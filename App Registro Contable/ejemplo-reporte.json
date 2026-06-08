@@ -1,0 +1,84 @@
+{
+  "fecha": "8/6/2026",
+  "ut": 43.00,
+  "movimientos": [
+    {
+      "id": 1717882951234,
+      "concepto": "Honorarios Profesionales",
+      "monto": 1000,
+      "nombreReceptor": "Juan Pérez",
+      "tipoReceptor": "Persona Natural Residente",
+      "esContribuyenteEspecial": false,
+      "islr": 26.78,
+      "iva": 0,
+      "totalRetenciones": 26.78,
+      "neto": 973.22,
+      "fecha": "8/6/2026 14:30:15"
+    },
+    {
+      "id": 1717882951235,
+      "concepto": "Servicios / Ejecución de obras",
+      "monto": 5000,
+      "nombreReceptor": "Empresa ABC C.A.",
+      "tipoReceptor": "PJ Domiciliada",
+      "esContribuyenteEspecial": false,
+      "islr": 100,
+      "iva": 0,
+      "totalRetenciones": 100,
+      "neto": 4900,
+      "fecha": "8/6/2026 14:31:22"
+    },
+    {
+      "id": 1717882951236,
+      "concepto": "Arrendamiento de bienes inmuebles",
+      "monto": 1000,
+      "nombreReceptor": "Carlos López",
+      "tipoReceptor": "Persona Natural Residente",
+      "esContribuyenteEspecial": true,
+      "islr": 26.78,
+      "iva": 750,
+      "totalRetenciones": 776.78,
+      "neto": 223.22,
+      "fecha": "8/6/2026 14:32:45"
+    },
+    {
+      "id": 1717882951237,
+      "concepto": "Comisiones",
+      "monto": 2000,
+      "nombreReceptor": "María González",
+      "tipoReceptor": "Persona Natural Residente",
+      "esContribuyenteEspecial": false,
+      "islr": 56.45,
+      "iva": 0,
+      "totalRetenciones": 56.45,
+      "neto": 1943.55,
+      "fecha": "8/6/2026 14:33:12"
+    },
+    {
+      "id": 1717882951238,
+      "concepto": "Gastos de transporte (fletes)",
+      "monto": 3000,
+      "nombreReceptor": "Transportes VE",
+      "tipoReceptor": "PJ Domiciliada",
+      "esContribuyenteEspecial": false,
+      "islr": 90,
+      "iva": 0,
+      "totalRetenciones": 90,
+      "neto": 2910,
+      "fecha": "8/6/2026 14:34:33"
+    }
+  ],
+  "totales": {
+    "totalIngresos": 12000,
+    "totalISLR": 300.01,
+    "totalIVA": 750,
+    "totalRetenciones": 1050.01,
+    "totalNeto": 10949.99
+  },
+  "resumen": {
+    "cantidadMovimientos": 5,
+    "promedioISLR": 60,
+    "promedioIVA": 150,
+    "porcentajeRetension": 8.75
+  }
+}

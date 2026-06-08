@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pruebas - Registro Contable Diario</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-case {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        .test-case.pass {
+            border-left-color: #27ae60;
+        }
+        .test-case.fail {
+            border-left-color: #e74c3c;
+        }
+        h2 {
+            margin: 0 0 10px 0;
+        }
+        .result {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .result.pass::before {
+            content: "✓ ";
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .result.fail::before {
+            content: "✗ ";
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Pruebas - Registro Contable Diario Venezuela</h1>
+    <p>UT: Bs. 43,00 (2025-2026)</p>
+
+    <div id="tests"></div>
+
+    <script>
+        // Copia de la función de cálculos desde app.js
+        const SENIAT_TABLE = {
+          'Honorarios Profesionales': {
+            PN: { rate: 0.03, sustraendo: 107.50 },
+            PJ: { rate: 0.05, sustraendo: 0 }
+          },
+          'Servicios / Ejecución de obras': {
+            PN: { rate: 0.01, sustraendo: 35.83 },
+            PJ: { rate: 0.02, sustraendo: 0 }
+          },
+          'Gastos de transporte (fletes)': {
+            PN: { rate: 0.01, sustraendo: 35.83 },
+            PJ: { rate: 0.03, sustraendo: 0 }
+          },
+          'Arrendamiento de bienes inmuebles': {
+            PN: { rate: 0.03, sustraendo: 107.50 },
+            PJ: { rate: 0.05, sustraendo: 0 }
+          },
+          'Arrendamiento de bienes muebles': {
+            PN: { rate: 0.03, sustraendo: 107.50 },
+            PJ: { rate: 0.05, sustraendo: 0 }
+          },
+          'Comisiones': {
+            PN: { rate: 0.03, sustraendo: 107.50 },
+            PJ: { rate: 0.05, sustraendo: 0 }
+          },
+          'Intereses': {
+            PN: { rate: 0.03, sustraendo: 107.50 },
+            PJ: { rate: 0.05, sustraendo: 0 }
+          },
+          'Regalías': {
+            PN_NR: { rate: 0.34, sustraendo: 0 },
+            PJ_ND: { rate: 0, sustraendo: 0 }
+          },
+          'Otros': {
+            PN: { rate: 0.02, sustraendo: 0 },
+            PJ: { rate: 0.03, sustraendo: 0 }
+          }
+        };
+
+        function calcularRetenciones(monto, concepto, tipoReceptor, esContribuyenteEspecial) {
+          let islr = 0;
+          let iva = 0;
+
+          const tabla = SENIAT_TABLE[concepto];
+
+          if (!tabla) {
+            return { islr: 0, iva: 0, totalRetenciones: 0, neto: monto };
+          }
+
+          const esPN = tipoReceptor.startsWith('Persona Natural');
+          const esResidente = tipoReceptor === 'Persona Natural Residente' || tipoReceptor === 'PJ Domiciliada';
+
+          if (concepto === 'Regalías') {
+            if (tipoReceptor === 'Persona Natural No Residente') {
+              islr = monto * tabla.PN_NR.rate;
+            } else if (tipoReceptor === 'PJ No Domiciliada') {
+              islr = monto * 0.5;
+            }
+          } else {
+            const config = esPN ? tabla.PN : tabla.PJ;
+            if (config) {
+              let baseISLR = monto;
+              if (esPN && esResidente && config.sustraendo > 0) {
+                baseISLR = Math.max(0, monto - config.sustraendo);
+              }
+              islr = baseISLR * config.rate;
+            }
+          }
+
+          if (esContribuyenteEspecial) {
+            iva = monto * 0.75;
+          }
+
+          const totalRetenciones = islr + iva;
+          const neto = monto - totalRetenciones;
+
+          return {
+            islr: Math.round(islr * 100) / 100,
+            iva: Math.round(iva * 100) / 100,
+            totalRetenciones: Math.round(totalRetenciones * 100) / 100,
+            neto: Math.round(neto * 100) / 100
+          };
+        }
+
+        // Casos de prueba
+        const tests = [
+          {
+            nombre: "Honorarios PN Residente - Bs. 1.000",
+            concepto: "Honorarios Profesionales",
+            monto: 1000,
+            tipoReceptor: "Persona Natural Residente",
+            esContribuyenteEspecial: false,
+            esperado: { islr: 26.78, iva: 0, totalRetenciones: 26.78, neto: 973.22 }
+          },
+          {
+            nombre: "Honorarios PN Residente - Bs. 500",
+            concepto: "Honorarios Profesionales",
+            monto: 500,
+            tipoReceptor: "Persona Natural Residente",
+            esContribuyenteEspecial: false,
+            esperado: { islr: 11.79, iva: 0, totalRetenciones: 11.79, neto: 488.21 }
+          },
+          {
+            nombre: "Honorarios PJ Domiciliada - Bs. 1.000",
+            concepto: "Honorarios Profesionales",
+            monto: 1000,
+            tipoReceptor: "PJ Domiciliada",
+            esContribuyenteEspecial: false,
+            esperado: { islr: 50, iva: 0, totalRetenciones: 50, neto: 950 }
+          },
+          {
+            nombre: "Servicios PN Residente - Bs. 2.000",
+            concepto: "Servicios / Ejecución de obras",
+            monto: 2000,
+            tipoReceptor: "Persona Natural Residente",
+            esContribuyenteEspecial: false,
+            esperado: { islr: 19.64, iva: 0, totalRetenciones: 19.64, neto: 1980.36 }
+          },
+          {
+            nombre: "Arrendamiento PN Residente Contribuyente Especial - Bs. 1.000",
+            concepto: "Arrendamiento de bienes inmuebles",
+            monto: 1000,
+            tipoReceptor: "Persona Natural Residente",
+            esContribuyenteEspecial: true,
+            esperado: { islr: 26.78, iva: 750, totalRetenciones: 776.78, neto: 223.22 }
+          },
+          {
+            nombre: "Comisiones PJ Domiciliada - Bs. 5.000",
+            concepto: "Comisiones",
+            monto: 5000,
+            tipoReceptor: "PJ Domiciliada",
+            esContribuyenteEspecial: false,
+            esperado: { islr: 250, iva: 0, totalRetenciones: 250, neto: 4750 }
+          },
+          {
+            nombre: "Fletes PJ No Domiciliada - Bs. 800",
+            concepto: "Gastos de transporte (fletes)",
+            monto: 800,
+            tipoReceptor: "PJ No Domiciliada",
+            esContribuyenteEspecial: false,
+            esperado: { islr: 24, iva: 0, totalRetenciones: 24, neto: 776 }
+          },
+          {
+            nombre: "Intereses PN No Residente - Bs. 1.500",
+            concepto: "Intereses",
+            monto: 1500,
+            tipoReceptor: "Persona Natural No Residente",
+            esContribuyenteEspecial: false,
+            esperado: { islr: 45, iva: 0, totalRetenciones: 45, neto: 1455 }
+          },
+          {
+            nombre: "Otros PN Residente - Bs. 300",
+            concepto: "Otros",
+            monto: 300,
+            tipoReceptor: "Persona Natural Residente",
+            esContribuyenteEspecial: false,
+            esperado: { islr: 6, iva: 0, totalRetenciones: 6, neto: 294 }
+          }
+        ];
+
+        function compararNumeros(actual, esperado, tolerancia = 0.01) {
+          return Math.abs(actual - esperado) < tolerancia;
+        }
+
+        const container = document.getElementById('tests');
+        let pasadas = 0;
+        let fallidas = 0;
+
+        tests.forEach((test, idx) => {
+          const resultado = calcularRetenciones(
+            test.monto,
+            test.concepto,
+            test.tipoReceptor,
+            test.esContribuyenteEspecial
+          );
+
+          const paso =
+            compararNumeros(resultado.islr, test.esperado.islr) &&
+            compararNumeros(resultado.iva, test.esperado.iva) &&
+            compararNumeros(resultado.totalRetenciones, test.esperado.totalRetenciones) &&
+            compararNumeros(resultado.neto, test.esperado.neto);
+
+          if (paso) pasadas++;
+          else fallidas++;
+
+          const div = document.createElement('div');
+          div.className = `test-case ${paso ? 'pass' : 'fail'}`;
+
+          const formatearMoneda = (v) => `Bs. ${v.toFixed(2)}`;
+
+          div.innerHTML = `
+            <h2>${idx + 1}. ${test.nombre}</h2>
+            <table>
+              <tr>
+                <th>Campo</th>
+                <th>Esperado</th>
+                <th>Actual</th>
+                <th>Estado</th>
+              </tr>
+              <tr>
+                <td>ISLR</td>
+                <td>${formatearMoneda(test.esperado.islr)}</td>
+                <td>${formatearMoneda(resultado.islr)}</td>
+                <td>${compararNumeros(resultado.islr, test.esperado.islr) ? '✓' : '✗'}</td>
+              </tr>
+              <tr>
+                <td>IVA</td>
+                <td>${formatearMoneda(test.esperado.iva)}</td>
+                <td>${formatearMoneda(resultado.iva)}</td>
+                <td>${compararNumeros(resultado.iva, test.esperado.iva) ? '✓' : '✗'}</td>
+              </tr>
+              <tr>
+                <td>Total Retenciones</td>
+                <td>${formatearMoneda(test.esperado.totalRetenciones)}</td>
+                <td>${formatearMoneda(resultado.totalRetenciones)}</td>
+                <td>${compararNumeros(resultado.totalRetenciones, test.esperado.totalRetenciones) ? '✓' : '✗'}</td>
+              </tr>
+              <tr>
+                <td>Neto</td>
+                <td>${formatearMoneda(test.esperado.neto)}</td>
+                <td>${formatearMoneda(resultado.neto)}</td>
+                <td>${compararNumeros(resultado.neto, test.esperado.neto) ? '✓' : '✗'}</td>
+              </tr>
+            </table>
+            <div class="result ${paso ? 'pass' : 'fail'}">
+              Concepto: ${test.concepto} | Receptor: ${test.tipoReceptor} | Contribuyente Especial: ${test.esContribuyenteEspecial ? 'Sí' : 'No'}
+            </div>
+          `;
+
+          container.appendChild(div);
+        });
+
+        // Resumen
+        const resumen = document.createElement('div');
+        resumen.style.cssText = 'background: white; padding: 20px; border-radius: 8px; border: 2px solid #3498db; margin-top: 20px;';
+        resumen.innerHTML = `
+          <h2>📊 Resumen de Pruebas</h2>
+          <p><strong>Total:</strong> ${tests.length} casos</p>
+          <p><strong style="color: #27ae60;">✓ Pasadas:</strong> ${pasadas}</p>
+          <p><strong style="color: #e74c3c;">✗ Fallidas:</strong> ${fallidas}</p>
+          <p><strong>Tasa de éxito:</strong> ${((pasadas / tests.length) * 100).toFixed(1)}%</p>
+        `;
+        container.appendChild(resumen);
+    </script>
+</body>
+</html>
