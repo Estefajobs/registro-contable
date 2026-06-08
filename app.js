@@ -350,7 +350,7 @@ function Resumen({ movimientos, formatearMoneda }) {
   return React.createElement('div', null,
     React.createElement('div', { className: 'summary-grid' },
       React.createElement('div', { className: 'summary-item' },
-        React.createElement('div', { className: 'summary-label' }, 'Total Ingresos'),
+        React.createElement('div', { className: 'summary-label' }, 'TOTAL MOVIMIENTOS'),
         React.createElement('div', { className: 'summary-value' }, formatearMoneda(totales.monto))
       ),
       React.createElement('div', { className: 'summary-item' },
@@ -489,3 +489,4 @@ function RegistroContableApp() {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(RegistroContableApp));
+
